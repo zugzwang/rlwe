@@ -99,8 +99,17 @@ impl<C: Characteristic> SubAssign for ModularBigInt<C> {
 impl<C: Characteristic> Mul for ModularBigInt<C> {
     type Output = Self;
 
-    fn mul(self, _other: Self) -> Self::Output {
-        todo!()
+    fn mul(self, other: Self) -> Self::Output {
+        let modulus: BigInt = C::to_biguint().into();
+        if modulus == Zero::zero() {
+            let val = self.representant.clone() * other.representant.clone();
+            Self {
+                representant: val,
+                modulus: PhantomData,
+            }
+        } else {
+            unimplemented!()
+        }
     }
 }
 
@@ -202,12 +211,27 @@ mod tests {
         type R = Cyclotomic<U16, CharZero>;
         let v: Vector = rand::thread_rng().gen::<[i64; 32]>().to_vec().into();
         let x: Element<R> = v.into();
-        let sum = x.clone() + x.clone();
-        let doubled: Vec<ModularBigInt<CharZero>> = x
+        let sum = x.clone() + &x;
+        let want: Vec<ModularBigInt<CharZero>> = x
             .coefficients()
             .iter()
             .map(|c| c.clone() + c.clone())
             .collect();
-        assert_eq!(sum.coefficients().as_slice(), doubled);
+        assert_eq!(sum.coefficients().as_slice(), want);
+    }
+
+    #[test]
+    fn hadamard_square() {
+        type R = Cyclotomic<U16, CharZero>;
+        let v: Vector = rand::thread_rng().gen::<[i64; 32]>().to_vec().into();
+        let x: Element<R> = v.clone().into();
+        let y: Element<R> = v.into();
+        let hadamard_square = x.hadamard(&y);
+        let want: Vec<ModularBigInt<CharZero>> = y
+            .coefficients()
+            .iter()
+            .map(|c| c.clone() * c.clone())
+            .collect();
+        assert_eq!(hadamard_square.coefficients().as_slice(), want);
     }
 }

@@ -46,19 +46,36 @@ impl<R: RlweRing> Element<R> {
     }
 }
 
-impl<R: RlweRing> Add for Element<R>
+impl<R: RlweRing> Add<&Element<R>> for Element<R>
 where
     Vec<R::Coefficient>: FromIterator<<R::Coefficient as Add>::Output>,
 {
     type Output = Self;
 
     #[must_use]
-    fn add(self, other: Self::Output) -> Self::Output {
+    fn add(self, other: &Self) -> Self::Output {
         let slice: Vec<R::Coefficient> = self
             .coefficients
             .into_iter()
-            .zip(other.coefficients)
+            .zip(other.coefficients.clone())
             .map(|(x, y)| x + y)
+            .collect();
+        let coeffs =
+            GenericArray::<R::Coefficient, R::Degree>::clone_from_slice(&slice);
+        Element::<R> {
+            coefficients: coeffs,
+        }
+    }
+}
+
+impl<R: RlweRing> Element<R>
+where Vec<R::Coefficient>: FromIterator<<R::Coefficient as Mul>::Output> {
+    pub fn hadamard(self, other: &Self) -> Self {
+        let slice: Vec<R::Coefficient> = self
+            .coefficients.clone()
+            .into_iter()
+            .zip(other.coefficients.clone())
+            .map(|(x, y)| x * y)
             .collect();
         let coeffs =
             GenericArray::<R::Coefficient, R::Degree>::clone_from_slice(&slice);
@@ -77,15 +94,17 @@ impl Vector {
     pub fn coordinates(&self) -> &Vec<BigInt> {
         &self.coordinates
     }
-
-    pub fn hadamard(&self, _other: &Self) -> Self {
-        todo!()
-    }
 }
 
 impl From<Vec<i64>> for Vector {
     fn from(x: Vec<i64>) -> Self {
         let coordinates: Vec<BigInt> = x.iter().map(|x| (*x).into()).collect();
+        Self { coordinates }
+    }
+}
+
+impl From<Vec<BigInt>> for Vector {
+    fn from(coordinates: Vec<BigInt>) -> Self {
         Self { coordinates }
     }
 }
