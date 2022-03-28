@@ -5,6 +5,7 @@ edition = "2021"
 description = "Arithmetic in RLWE rings"
 authors = ["zugzwang <francisco@vialprado.com>"]
 readme = "README.md"
+license = "MIT"
 
 [dependencies]
 generic-array = "0.14.5"
