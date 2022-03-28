@@ -5,27 +5,34 @@ use num_bigint::{BigInt, BigUint};
 use num_traits::Zero;
 use typenum::{PowerOfTwo, Unsigned};
 
+/// The characteristic of a field. It must be zero, or a prime number.
 pub trait Characteristic: Clone {
     fn to_biguint() -> BigUint;
 }
 
+/// A macro for defining a characteristic, after choosing a prime.
+/// Example usage: `characteristic!(Char19, BigUint::from_u32(19))`.
 #[macro_export]
 macro_rules! characteristic {
     ($name: ident, $value: expr) => {
         #[derive(Clone, Debug, PartialEq)]
-        pub struct $name {}
-        impl Characteristic for $name {
-            fn to_biguint() -> BigUint {
-                $value
-            }
-        }
+        struct $name {}
+        impl Characteristic for $name { fn to_biguint() -> BigUint { $value } }
     };
 }
 
+/// The zero characteristic. When CharZero is used to instantiate a ring, the
+/// coefficients are in ℤ.
+#[derive(Clone, Debug, PartialEq)]
+pub struct CharZero {}
+impl Characteristic for CharZero { fn to_biguint() -> BigUint { Zero::zero()} }
+
+/// An element of the given field.
 pub trait FieldElement: From<BigInt> + Clone + Add + Mul {
     type Char: Characteristic;
 }
 
+/// A polynomial ring over a field K and power of two degree.
 pub trait RlweRing: Sized {
     type Coefficient: FieldElement;
     type Degree: ArrayLength<Self::Coefficient> + PowerOfTwo;
@@ -44,6 +51,7 @@ pub trait RlweRing: Sized {
     }
 }
 
+/// An element of a RlweRing.
 #[derive(Clone, Debug, PartialEq)]
 pub struct Element<R: RlweRing> {
     pub(crate) coefficients: GenericArray<R::Coefficient, R::Degree>,
@@ -105,6 +113,17 @@ where
     }
 }
 
+/// A vector is a collection of integers, and it can be used to instantiate an
+/// element of a RLWE ring. Nothing is assumed about the coefficients. When
+/// projecting a vector into a RLWE ring, the i-th entry is treated as the
+/// coefficient of `X^i`, after the eventual modular reduction.
+///
+/// # Example:
+/// ```
+/// # use rlwe::traits::Vector;
+///
+/// // Represents X² - 1
+/// let v1: Vector = vec![-1, 0, 1].into();
 #[derive(Clone, Debug, PartialEq)]
 pub struct Vector {
     pub(crate) coordinates: Vec<BigInt>,
@@ -128,5 +147,3 @@ impl From<Vec<BigInt>> for Vector {
         Self { coordinates }
     }
 }
-
-characteristic!(CharZero, Zero::zero());

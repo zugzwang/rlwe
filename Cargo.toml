@@ -2,6 +2,7 @@
 name = "rlwe"
 version = "0.1.0"
 edition = "2021"
+description = "Arithmetic in RLWE rings"
 authors = ["zugzwang <francisco@vialprado.com>"]
 readme = "README.md"
 

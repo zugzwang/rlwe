@@ -9,6 +9,8 @@ use typenum::{PowerOfTwo, Unsigned};
 
 use crate::traits::{Characteristic, Element, FieldElement, RlweRing, Vector};
 
+/// An integer modulo the given characteristic. For positive characteristic `p`,
+/// a ModularBigInt is an integer in the set (-p/2, p/2].
 #[derive(Clone, PartialEq)]
 pub struct ModularBigInt<C: Characteristic> {
     representant: BigInt,
@@ -117,6 +119,26 @@ impl<C: Characteristic> FieldElement for ModularBigInt<C> {
     type Char = C;
 }
 
+/// A ring of the form `K[x]/(x^n+1)` where `n` is a power of two, and `K` is ℤ
+/// or 𝔽ₚ for `p = 1 mod 2n`.
+///
+/// Example:
+///
+/// ```
+/// use typenum::U4;
+/// # use rlwe::traits::{CharZero, Element, Vector};
+/// # use rlwe::cyclotomic::Cyclotomic;
+/// // For other characteristics, use the `characteristic` macro.
+/// type R = Cyclotomic<U4, CharZero>;
+///
+/// let a: Vector = vec![1, 2, 3, 4, 5, 6].into();
+/// let b: Vector = vec![-4, -4, 3, 4].into();
+/// let c: Vector = vec![-8, -8, 6, 8].into();
+/// let x: Element<R> = a.into();
+/// let y: Element<R> = b.into();
+/// let z: Element<R> = c.into();
+/// assert_eq!(x, y);
+/// assert_eq!(x + &y, z);
 #[derive(Clone, Debug, PartialEq)]
 pub struct Cyclotomic<T: Unsigned + PowerOfTwo, C: Characteristic> {
     degree: PhantomData<T>,
