@@ -9,6 +9,19 @@ pub trait Characteristic: Clone {
     fn to_biguint() -> BigUint;
 }
 
+#[macro_export]
+macro_rules! characteristic {
+    ($name: ident, $value: expr) => {
+        #[derive(Clone, Debug, PartialEq)]
+        pub struct $name {}
+        impl Characteristic for $name {
+            fn to_biguint() -> BigUint {
+                $value
+            }
+        }
+    };
+}
+
 pub trait FieldElement: From<BigInt> + Clone + Add + Mul {
     type Char: Characteristic;
 }
@@ -54,6 +67,8 @@ where
 
     #[must_use]
     fn add(self, other: &Self) -> Self::Output {
+        // TODO: Perform modular reduction on the vec, to avoid using the
+        // characteristic too often.
         let slice: Vec<R::Coefficient> = self
             .coefficients
             .into_iter()
@@ -69,10 +84,15 @@ where
 }
 
 impl<R: RlweRing> Element<R>
-where Vec<R::Coefficient>: FromIterator<<R::Coefficient as Mul>::Output> {
+where
+    Vec<R::Coefficient>: FromIterator<<R::Coefficient as Mul>::Output>,
+{
     pub fn hadamard(self, other: &Self) -> Self {
+        // TODO: Perform modular reduction on the vec, to avoid using the
+        // characteristic too often.
         let slice: Vec<R::Coefficient> = self
-            .coefficients.clone()
+            .coefficients
+            .clone()
             .into_iter()
             .zip(other.coefficients.clone())
             .map(|(x, y)| x * y)
@@ -109,6 +129,4 @@ impl From<Vec<BigInt>> for Vector {
     }
 }
 
-#[derive(Clone, Debug, PartialEq)]
-pub struct CharZero {}
-impl Characteristic for CharZero { fn to_biguint() -> BigUint { Zero::zero() } }
+characteristic!(CharZero, Zero::zero());
